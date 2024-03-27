@@ -1,24 +1,27 @@
 import {
-    type Chain,
-    type EIP1193Provider,
-    type Transport,
-    type WalletClientConfig,
+    // type Chain,
+    // type EIP1193Provider,
+    // type Transport,
+    // type WalletClientConfig,
     type WalletClient,
     type PublicClient,
-    custom,
+    // custom,
     createWalletClient,
     createPublicClient,
+    extractChain,
+    http,
     // type EstimateGasParameters,
     // type TransactionSerializable,
     // type OneOf
 } from 'viem';
 
-import { skaleEuropa } from 'viem/chains';
+import { skaleEuropa, skaleEuropaTestnet, skaleCalypso, skaleCalypsoTestnet, skaleNebula, skaleNebulaTestnet, skaleTitan, skaleTitanTestnet } from 'viem/chains';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 
 import mineGasForTransaction from '$lib/skale-miner';
 
 import { scaleFaucets } from './skaleFaucets';
+
 
 interface ExtendedTransaction {
     to: `0x${string}`;
@@ -32,6 +35,20 @@ let _sessionPrivateKey: `0x${string}`;
 
 const rmBytesSymbol = (address: string) => address.replace(/^0x/, '');
 
+const chains = [skaleEuropa, skaleEuropaTestnet, skaleCalypso, skaleCalypsoTestnet, skaleNebula, skaleNebulaTestnet, skaleTitan, skaleTitanTestnet];
+const chainsId = chains.map((chain) => chain.id);
+type ChainIdsType = (typeof chainsId)[number];
+// type chainIds = 2046399126 | 1444673419 | 1564830818 | 974399131 | 1482601649 | 37084624 | 1350216234 | 1020352220
+type ChainType = (typeof chains)[number];
+
+const getChainFromId = (chainId: number): ChainType => {
+    return extractChain({
+        chains: chains,
+        id: chainId as ChainIdsType,
+    });
+
+}
+
 const faucetAddressGet = (chainId: number): `0x${string}` => scaleFaucets[chainId]
 
 const functionSignatureGet = (chainId: number): `0x${string}` => {
@@ -40,38 +57,40 @@ const functionSignatureGet = (chainId: number): `0x${string}` => {
 }
 
 ////////////////////////////////////////////////
-const _windowEthereum = (): EIP1193Provider => {
-    if (!window?.ethereum) throw new Error("windowEthereum: Install Web3 extension like Rabby or Metamask");
+// const _windowEthereum = (): EIP1193Provider => {
+//     if (!window?.ethereum) throw new Error("windowEthereum: Install Web3 extension like Rabby or Metamask");
 
-    return window.ethereum;
-};
+//     return window.ethereum;
+// };
 
-const _transportEthereum = (): WalletClientConfig<Transport, Chain | undefined> => {
-    return { transport: custom(_windowEthereum()) };
-};
+// const _transportEthereum = (): WalletClientConfig<Transport, Chain | undefined> => {
+//     return { transport: custom(_windowEthereum()) };
+// };
 
 ////////////////////////////////////////////////
-const receiveFunds = async (account: string) => {
+const receiveFunds = async (account: string, chainId: number) => {
     if (!account) throw new Error('No account provided');
 
     if (!_sessionPrivateKey) {
         _sessionPrivateKey = generatePrivateKey();
     }
 
-    const transactionReceipt = await testReceive(_sessionPrivateKey, rmBytesSymbol(account));
+    const transactionReceipt = await testReceive(_sessionPrivateKey, rmBytesSymbol(account), chainId);
     console.info('receiveFunds ~ transactionReceipt:', transactionReceipt);
 
     return transactionReceipt;
 };
 
-const testReceive = async (sessionPrivateKey: `0x${string}`, receiverAddress: string) => {
+const testReceive = async (sessionPrivateKey: `0x${string}`, receiverAddress: string, chainId: number) => {
     const signer = privateKeyToAccount(sessionPrivateKey);
     const sessionAccount = signer.address;
     console.info('New sessionAccount generated: ' + sessionAccount);
 
-    const publicClient: PublicClient = createPublicClient({ account: sessionAccount, ..._transportEthereum() });
-    const walletClient: WalletClient = createWalletClient({ account: sessionAccount, ..._transportEthereum() });
-    const chainId = await publicClient.getChainId();
+    const chain = getChainFromId(chainId)
+    console.log("testReceive ~ chain:", chain.name);
+    const publicClient: PublicClient = createPublicClient({ chain, transport: http() });
+    const walletClient: WalletClient = createWalletClient({ account: sessionAccount, chain, transport: http() });
+    // const chainId = await publicClient.getChainId();
     console.log("testReceive ~ chainId:", chainId)
 
     const nonce = await publicClient.getTransactionCount({ address: sessionAccount });
