@@ -36,9 +36,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@skaleproject/skale.js": "^0.3.2",
-		"bn.js": "^5.2.1",
-		"viem": "^2.8.11",
-		"web3": "^4.6.0"
+		"viem": "^2.8.11"
 	}
 }
