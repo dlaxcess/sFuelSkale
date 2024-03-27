@@ -38,7 +38,6 @@ const rmBytesSymbol = (address: string) => address.replace(/^0x/, '');
 const chains = [skaleEuropa, skaleEuropaTestnet, skaleCalypso, skaleCalypsoTestnet, skaleNebula, skaleNebulaTestnet, skaleTitan, skaleTitanTestnet];
 const chainsId = chains.map((chain) => chain.id);
 type ChainIdsType = (typeof chainsId)[number];
-// type chainIds = 2046399126 | 1444673419 | 1564830818 | 974399131 | 1482601649 | 37084624 | 1350216234 | 1020352220
 type ChainType = (typeof chains)[number];
 
 const getChainFromId = (chainId: number): ChainType => {
@@ -57,17 +56,6 @@ const functionSignatureGet = (chainId: number): `0x${string}` => {
 }
 
 ////////////////////////////////////////////////
-// const _windowEthereum = (): EIP1193Provider => {
-//     if (!window?.ethereum) throw new Error("windowEthereum: Install Web3 extension like Rabby or Metamask");
-
-//     return window.ethereum;
-// };
-
-// const _transportEthereum = (): WalletClientConfig<Transport, Chain | undefined> => {
-//     return { transport: custom(_windowEthereum()) };
-// };
-
-////////////////////////////////////////////////
 const receiveFunds = async (account: string, chainId: number) => {
     if (!account) throw new Error('No account provided');
 
@@ -83,7 +71,6 @@ const receiveFunds = async (account: string, chainId: number) => {
     console.log("testReceive ~ chain:", chain.name);
     const publicClient: PublicClient = createPublicClient({ chain, transport: http() });
     const walletClient: WalletClient = createWalletClient({ account: sessionAccount, chain, transport: http() });
-    // const chainId = await publicClient.getChainId();
     console.log("testReceive ~ chainId:", chainId)
 
     const nonce = await publicClient.getTransactionCount({ address: sessionAccount });
