@@ -8,9 +8,9 @@ import {
     custom,
     createWalletClient,
     createPublicClient,
-    type EstimateGasParameters,
-    type TransactionSerializable,
-    type OneOf
+    // type EstimateGasParameters,
+    // type TransactionSerializable,
+    // type OneOf
 } from 'viem';
 
 import { skaleEuropa } from 'viem/chains';
@@ -83,14 +83,14 @@ const testReceive = async (sessionPrivateKey: `0x${string}`, receiverAddress: st
         nonce: nonce
     };
 
-    const gas = await publicClient.estimateGas(tx as EstimateGasParameters);
+    const gas = await publicClient.estimateGas(tx);
     const { duration, gasPrice } = await mineGasForTransaction(nonce, Number(gas), sessionAccount);
     console.info('POW duration:', duration);
 
     tx = { ...tx, gas, gasPrice };
     console.info('Prepared ~ Tx:', tx);
 
-    const signedTx = await signer.signTransaction(tx as OneOf<TransactionSerializable>);
+    const signedTx = await signer.signTransaction(tx);
     console.info('Signed ~ Tx:', signedTx);
 
     const hash = await walletClient.sendRawTransaction({
