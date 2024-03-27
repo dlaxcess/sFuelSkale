@@ -3,13 +3,13 @@ import {
     // type EIP1193Provider,
     // type Transport,
     // type WalletClientConfig,
-    type WalletClient,
     type PublicClient,
+    type WalletClient,
     // custom,
-    createWalletClient,
-    createPublicClient,
-    extractChain,
     http,
+    createPublicClient,
+    createWalletClient,
+    extractChain,
     // type EstimateGasParameters,
     // type TransactionSerializable,
     // type OneOf
@@ -75,14 +75,7 @@ const receiveFunds = async (account: string, chainId: number) => {
         _sessionPrivateKey = generatePrivateKey();
     }
 
-    const transactionReceipt = await testReceive(_sessionPrivateKey, rmBytesSymbol(account), chainId);
-    console.info('receiveFunds ~ transactionReceipt:', transactionReceipt);
-
-    return transactionReceipt;
-};
-
-const testReceive = async (sessionPrivateKey: `0x${string}`, receiverAddress: string, chainId: number) => {
-    const signer = privateKeyToAccount(sessionPrivateKey);
+    const signer = privateKeyToAccount(_sessionPrivateKey);
     const sessionAccount = signer.address;
     console.info('New sessionAccount generated: ' + sessionAccount);
 
@@ -98,7 +91,7 @@ const testReceive = async (sessionPrivateKey: `0x${string}`, receiverAddress: st
 
     let tx: ExtendedTransaction = {
         to: faucetAddressGet(chainId),
-        data: (functionSignatureGet(chainId) + receiverAddress) as `0x${string}`,
+        data: (functionSignatureGet(chainId) + rmBytesSymbol(account)) as `0x${string}`,
         nonce: nonce
     };
 
@@ -117,9 +110,12 @@ const testReceive = async (sessionPrivateKey: `0x${string}`, receiverAddress: st
     });
     console.log("Tx ~ hash:", hash)
 
-    return await publicClient.waitForTransactionReceipt({
+    const transactionReceipt = await publicClient.waitForTransactionReceipt({
         hash: hash,
     });
+    console.log("receiveFunds ~ transactionReceipt:", transactionReceipt)
+
+    return transactionReceipt;
 };
 
 export { receiveFunds }
