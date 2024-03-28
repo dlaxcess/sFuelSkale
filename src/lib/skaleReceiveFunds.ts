@@ -1,26 +1,18 @@
 import {
-    // type Chain,
-    // type EIP1193Provider,
-    // type Transport,
-    // type WalletClientConfig,
     type PublicClient,
     type WalletClient,
-    // custom,
     http,
     createPublicClient,
     createWalletClient,
     extractChain,
-    // type EstimateGasParameters,
-    // type TransactionSerializable,
-    // type OneOf
 } from 'viem';
-
-import { skaleEuropa, skaleEuropaTestnet, skaleCalypso, skaleCalypsoTestnet, skaleNebula, skaleNebulaTestnet, skaleTitan, skaleTitanTestnet } from 'viem/chains';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
+import { skaleEuropa, skaleEuropaTestnet, skaleCalypso, skaleCalypsoTestnet, skaleNebula, skaleNebulaTestnet, skaleTitan, skaleTitanTestnet } from 'viem/chains';
+
 
 import mineGasForTransaction from '$lib/skale-miner';
-
 import { scaleFaucets } from './skaleFaucets';
+
 
 
 interface ExtendedTransaction {
