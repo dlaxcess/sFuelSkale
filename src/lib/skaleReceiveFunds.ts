@@ -38,63 +38,69 @@ const getChainFromId = (chainId: number): ChainType => {
         id: chainId as ChainIdsType,
     });
 
-}
+};
 
-const faucetAddressGet = (chainId: number): `0x${string}` => scaleFaucets[chainId]
+const faucetAddressGet = (chainId: number): `0x${string}` => scaleFaucets[chainId];
 
 const functionSignatureGet = (chainId: number): `0x${string}` => {
     const functionSignature = chainId === skaleEuropa.id ? "0x6a627842" : "0x0c11dedd";
     return `${functionSignature}000000000000000000000000`;
-}
+};
 
 ////////////////////////////////////////////////
 const receiveFunds = async (account: string, chainId: number) => {
-    if (!account) throw new Error('No account provided');
+    try {
+        if (!account) throw new Error('No account provided');
+        if (!chainsId.includes(chainId as ChainIdsType)) throw new Error("You Must be on a Skale chain");
 
-    if (!_sessionPrivateKey) {
-        _sessionPrivateKey = generatePrivateKey();
+        if (!_sessionPrivateKey) {
+            _sessionPrivateKey = generatePrivateKey();
+        }
+
+        const signer = privateKeyToAccount(_sessionPrivateKey);
+        const sessionAccount = signer.address;
+        console.info('New sessionAccount generated: ' + sessionAccount);
+
+        const chain = getChainFromId(chainId);
+        console.log("testReceive ~ chain:", chain.name);
+        const publicClient: PublicClient = createPublicClient({ chain, transport: http() });
+        const walletClient: WalletClient = createWalletClient({ account: sessionAccount, chain, transport: http() });
+        console.log("testReceive ~ chainId:", chainId);
+
+        const nonce = await publicClient.getTransactionCount({ address: sessionAccount });
+        console.info('sessionAccount ~ nonce:', nonce);
+
+        let tx: ExtendedTransaction = {
+            to: faucetAddressGet(chainId),
+            data: (functionSignatureGet(chainId) + rmBytesSymbol(account)) as `0x${string}`,
+            nonce: nonce
+        };
+
+        const gas = await publicClient.estimateGas(tx);
+        const { duration, gasPrice } = await mineGasForTransaction(nonce, Number(gas), sessionAccount);
+        console.info('POW duration:', duration);
+
+        tx = { ...tx, gas, gasPrice };
+        console.info('Prepared ~ Tx:', tx);
+
+        const signedTx = await signer.signTransaction(tx);
+        console.info('Signed ~ Tx:', signedTx);
+
+        const hash = await walletClient.sendRawTransaction({
+            serializedTransaction: signedTx
+        });
+        console.log("Tx ~ hash:", hash);
+
+        const transactionReceipt = await publicClient.waitForTransactionReceipt({
+            hash: hash,
+        });
+        console.log("receiveFunds ~ transactionReceipt:", transactionReceipt);
+
+        return transactionReceipt;
+    } catch (err) {
+        console.error((err as Error).message);
+        return;
     }
-
-    const signer = privateKeyToAccount(_sessionPrivateKey);
-    const sessionAccount = signer.address;
-    console.info('New sessionAccount generated: ' + sessionAccount);
-
-    const chain = getChainFromId(chainId)
-    console.log("testReceive ~ chain:", chain.name);
-    const publicClient: PublicClient = createPublicClient({ chain, transport: http() });
-    const walletClient: WalletClient = createWalletClient({ account: sessionAccount, chain, transport: http() });
-    console.log("testReceive ~ chainId:", chainId)
-
-    const nonce = await publicClient.getTransactionCount({ address: sessionAccount });
-    console.info('sessionAccount ~ nonce:', nonce);
-
-    let tx: ExtendedTransaction = {
-        to: faucetAddressGet(chainId),
-        data: (functionSignatureGet(chainId) + rmBytesSymbol(account)) as `0x${string}`,
-        nonce: nonce
-    };
-
-    const gas = await publicClient.estimateGas(tx);
-    const { duration, gasPrice } = await mineGasForTransaction(nonce, Number(gas), sessionAccount);
-    console.info('POW duration:', duration);
-
-    tx = { ...tx, gas, gasPrice };
-    console.info('Prepared ~ Tx:', tx);
-
-    const signedTx = await signer.signTransaction(tx);
-    console.info('Signed ~ Tx:', signedTx);
-
-    const hash = await walletClient.sendRawTransaction({
-        serializedTransaction: signedTx
-    });
-    console.log("Tx ~ hash:", hash)
-
-    const transactionReceipt = await publicClient.waitForTransactionReceipt({
-        hash: hash,
-    });
-    console.log("receiveFunds ~ transactionReceipt:", transactionReceipt)
-
-    return transactionReceipt;
 };
 
-export { receiveFunds }
+export { receiveFunds };
