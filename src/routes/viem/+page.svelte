@@ -19,7 +19,7 @@
 
 	onMount(async () => {
 		if (typeof window.ethereum !== 'undefined') {
-			windowEthEnable();
+			// windowEthEnable();
 
 			client = createPublicClient({
 				transport: custom(window.ethereum)
@@ -84,7 +84,9 @@
 
 <div class="user-config">
 	{#if !account}
-		<button class="btn-connect" on:click={connectMetamask}> Connect Metamask </button>
+		<button id="connect-metamask-button" class="btn-connect" on:click={connectMetamask}>
+			Connect Metamask
+		</button>
 	{/if}
 
 	<div class="provisory">
